@@ -11,7 +11,9 @@ Since hunspell is a unix based software, this module will work only on linux and
 
 
 *sudo apt-get install python-dev: Needed python dev tools 
+
 *sudo apt-get install libhunspell: Installing Hunspell native library files 
+
 *pip install hunspell : Installing the hunspell python wrapper to be used by **funspell**
 
 
