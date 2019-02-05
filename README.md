@@ -20,3 +20,8 @@ Since hunspell is a unix based software, this module will work only on linux and
 ## Example 
 
 refer the test.py to understand how to perform spell correction.
+
+## Root of the Idea
+
+The idea for this spell corrector is inspired by the paper 'spelling correction using N-grams'by David Sundby. You can check it from the docs folder. 
+
