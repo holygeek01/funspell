@@ -10,18 +10,32 @@
 Since hunspell is a unix based software, this module will work only on linux and Mac platform currently. We need to install the following packages using our package manager. This are the instructions for linux platform and Mac users can map this commands with their own package management tools. 
 
 
-*sudo apt-get install python-dev: Needed python dev tools 
+- sudo apt-get install python-dev: Needed python dev tools 
 
-*sudo apt-get install libhunspell: Installing Hunspell native library files 
+-  sudo apt-get install libhunspell-dev : Installing Hunspell native library files 
 
-*pip install hunspell : Installing the hunspell python wrapper to be used by **funspell**
+- PIP install nltk, pandas # essential packages 
+
+- pip install hunspell : Installing the hunspell python wrapper to be used by **funspell**
 
 
-## Example 
+## How to use it
 
-refer the test.py to understand how to perform spell correction.
+refer the demo.py to understand how to perform spell correction.
+
+- A n-gram model has to be build to use the spell corrector.
+-  We can use any online available corpus like wikipedia or custom corpus to build n-gram model. 
+
+To build n-gram model:
+
+run "python3 funspell.py [path todata/corpus] ['file name.txt] [output path to save the model]
+
+Use the "ngram.pkl" file generated from the above step to instantiate.
+
+We can add custom words to avoid unwanted correction using "update_vocabulary_file()" function in Funspell class.
+
 
 ## Root of the Idea
 
-The idea for this spell corrector is inspired by the paper 'spelling correction using N-grams'by David Sundby. You can check it from the docs folder. 
+The idea for this spell corrector is inspired by the paper 'spelling correction using N-grams'by David Sundby. You can check it from the reference folder. 
 

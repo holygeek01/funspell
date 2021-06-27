@@ -1,17 +1,84 @@
 """
 Funspell is An automatic spell corrector using statistical n-gram models. This is a module which help us to build our custom n-gram model and make use of that language model to perform a context aware automatic spell correction.
 """
+
 import pickle
 import os
 import re
-from nltk.util import ngrams
-import hunspell
 import string
 import collections
+import sys 
+
+from nltk.util import ngrams
+from pandas import read_csv
+import hunspell
+
+
+def build_ngram_model(file_path, data_file, output_path="./"):
+    """A method which estimate the n-grams and persist it to disk
+    Keyword parameters:
+    data_file:str
+    file name which data is stored
+    file_path:str
+    file path where the data file is present
+    output_path : str
+    A pkl file will be generated to this given path
+    """
+
+    try:
+        with open(os.path.join(file_path, data_file), "rb") as file :
+            text=str(file.read())
+        
+    except Exception as e:
+        print(e)
+        return 
+    punctuationNoPeriod = "[" + re.sub("\.","",string.punctuation)+ "]"
+    text = re.sub(punctuationNoPeriod, "", text)
+
+    #getting the tokens
+    tokenized=text.split()
+    ngram_dict={}
+    #getting ngrams
+    esBigrams=ngrams(tokenized,2)
+    esUnigrams=ngrams(tokenized,1)
+    esTrigrams=ngrams(tokenized,3)
+    es4grams=ngrams(tokenized,4)
+    es5grams=ngrams(tokenized,5)
+    #getting frequencies of each ngrams
+    ngram_freq=dict()
+    esBigramFreq=dict(collections.Counter(esBigrams))
+    ngram_freq.update(esBigramFreq)
+    esUnigramFreq=dict(collections.Counter(esUnigrams))
+    ngram_freq.update(esUnigramFreq)
+    esTrigramFreq=dict(collections.Counter(esTrigrams))
+    ngram_freq.update(esTrigramFreq)
+    es4gramFreq=dict(collections.Counter(es4grams))
+    ngram_dict.update(es4gramFreq)
+    es5gramFreq=dict(collections.Counter(es5grams))
+    ngram_freq.update(es5gramFreq)
+
+    with open(os.path.join(output_path,'ngram.pkl'),'wb') as ngram :
+        pickle.dump(ngram_freq,ngram)
+    
+    print("files saved")
+
+
+if len(sys.argv) > 1 :
+    #get path to the file from  sys.argv[1]
+    file_path = sys.argv[1]
+    # get the file name from sys.argv[2]
+    file_name =sys.argv[2]
+    #get output_path from sys.argv[3]
+    output_path = sys.argv[3]
+    build_ngram_model(file_name, file_path, output_path)
 
 
 class Funspell():
     def __init__(self,file_path='./'):
+        """
+        file_path : str
+        Path to ngram.pkl file build using build_ngram_model function
+        """
         self.h = hunspell.HunSpell("/usr/share/hunspell/en_US.dic", "/usr/share/hunspell/en_US.aff")
         self.spell = self.h.spell
         self.file_path=file_path
@@ -21,53 +88,8 @@ class Funspell():
             self.model.close()
         except Exception:
             print("please build n-gram first")
-            exit()
+            return 
 
-    def build_ngram( self, data_file,file_path):
-        """A method which estimate the n-grams and persist it to disk
-        Keyword parameters:
-        data_file:str
-        file name which data is stored
-        file_path:str
-        file path the file exists
-        A pkl file will be generated.
-        """
-
-        try:
-            file=open(os.path.join(file_path, data_file), "rb")
-            text=str(file.read())
-            file.close()
-        except e:
-            print(e)
-            exit()
-        punctuationNoPeriod = "[" + re.sub("\.","",string.punctuation)+ "]"
-        text = re.sub(punctuationNoPeriod, "", text)
-
-        #getting the tokens
-        tokenized=text.split()
-        ngram_dict={}
-        #getting ngrams
-        esBigrams=ngrams(tokenized,2)
-        esUnigrams=ngrams(tokenized,1)
-        esTrigrams=ngrams(tokenized,3)
-        es4grams=ngrams(tokenized,4)
-        es5grams=ngrams(tokenized,5)
-        #getting frequencies of each ngrams
-        ngram_freq=dict()
-        esBigramFreq=dict(collections.Counter(esBigrams))
-        ngram_freq.update(esBigramFreq)
-        esUnigramFreq=dict(collections.Counter(esUnigrams))
-        ngram_freq.update(esUnigramFreq)
-        esTrigramFreq=dict(collections.Counter(esTrigrams))
-        ngram_freq.update(esTrigramFreq)
-        es4gramFreq=dict(collections.Counter(es4grams))
-        ngram_dict.update(es4gramFreq)
-        es5gramFreq=dict(collections.Counter(es5grams))
-        ngram_freq.update(es5gramFreq)
-
-        ngram=open('ngram.pkl','wb')
-        pickle.dump(ngram_freq,ngram)
-        print("files saved")
 
     def update_vocabulary_file(self, file_path="./"):
         """update HunSpell vocabulary using csv
@@ -76,16 +98,15 @@ class Funspell():
         file_path:str
         a csv file name in the root directory
         """
-        import pandas as pd
+        
 
         hunspell_add = self.h.add
         try:
-            file_name = "vocab.csv"
-            df = pd.read_csv(os.path.join(file_path, file_name))
+            df = read_csv(file_path)
             words_to_add = list(df.words)
 
         except Exception as e:
-            print(e)
+            print("Update Failed, Please check the pathand confirm .csv file present in it")
             return
 
         words_to_add = map(str.lower, words_to_add)
@@ -255,10 +276,3 @@ class Funspell():
                 each_wrong, after_correction, int(value_of_n)
             )
         return after_correction
-
-if __name__=="__main__":
-    from funspell import Funspell
-    f=Funspell()
-    #f.update_vocabulary_file() #CSV should be present in the current folder(./)
-    inp=input("enter the text \n")
-    print(f.correct(inp))
